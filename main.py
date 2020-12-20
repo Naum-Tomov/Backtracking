@@ -1,9 +1,13 @@
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-
+import pygame
 
 DIM = 9;
+x = 0
+y = 0
+dif = 500 / 9
+
+screen = pygame.display.set_mode((500, 600))
+
 sudokuGrid = np.zeros((DIM, DIM), dtype=np.int32);
 
 primer1 = [ [3, 0, 6, 5, 0, 8, 4, 0, 0],
@@ -25,21 +29,53 @@ for row in range(len(primer1)):
 print("Our sudoku grid: ")
 print(sudokuGrid)
 
+# Load test fonts for future use
+font1 = pygame.font.SysFont()
 
 
-df = pd.DataFrame(sudokuGrid)
-#display(df)
-
-w = 5
-h = 5
-plt.figure(1, figsize=(w, h))
-tb = plt.table(cellText=sudokuGrid, loc=(0,0), cellLoc='center')
+def get_cord(pos):
+    global x
+    x = pos[0] // dif
+    global y
+    y = pos[1] // dif
 
 
-ax = plt.gca()
-ax.set_xticks([])
-ax.set_yticks([])
-plt.show()
+# Highlight the cell selected
+def draw_box():
+    for i in range(2):
+        pygame.draw.line(screen, (255, 0, 0), (x * dif - 3, (y + i) * dif), (x * dif + dif + 3, (y + i) * dif), 7)
+        pygame.draw.line(screen, (255, 0, 0), ((x + i) * dif, y * dif), ((x + i) * dif, y * dif + dif), 7)
+
+    # Function to draw required lines for making Sudoku grid
+
+
+def draw():
+    # Draw the lines
+
+    for i in range(9):
+        for j in range(9):
+            if sudokuGrid[i][j] != 0:
+                # Fill blue color in already numbered grid
+                pygame.draw.rect(screen, (0, 153, 153), (i * dif, j * dif, dif + 1, dif + 1))
+
+                # Fill gird with default numbers specified
+                text1 = font1.render(str(sudokuGrid[i][j]), 1, (0, 0, 0))
+                screen.blit(text1, (i * dif + 15, j * dif + 15))
+                # Draw lines horizontally and verticallyto form grid
+    for i in range(10):
+        if i % 3 == 0:
+            thick = 7
+        else:
+            thick = 1
+        pygame.draw.line(screen, (0, 0, 0), (0, i * dif), (500, i * dif), thick)
+        pygame.draw.line(screen, (0, 0, 0), (i * dif, 0), (i * dif, 500), thick)
+
+    # Fill value entered in cell
+
+
+def draw_val(val):
+    text1 = font1.render(str(val), 1, (0, 0, 0))
+    screen.blit(text1, (x * dif + 15, y * dif + 15))
 
 
 def isValidMove(number, Xcoord, Ycoord):
@@ -62,18 +98,42 @@ def isNumberInSquare(number, squareIndex1, squareIndex2):
     return True;
 
 
-def solve():
-    global sudokuGrid;
-    for row in range(DIM):
-        for col in range(DIM):
-            if sudokuGrid[row][col] == 0:
-                for number in range(1,10):
-                    if isValidMove(number, row, col):
-                        sudokuGrid[row][col] = number;  # try this number
-                        solve();  # continue solving with the previous number
-                        sudokuGrid[row][col] = 0;  # set the number back to 0 if the solution failed
-                return;  # return after you check all numbers
-    print(sudokuGrid);
+def solve(X, Y):
+    while sudokuGrid[X][Y] != 0:  # not empty
+        if X < 8:  # going throw row
+            X += 1
+        elif X == 8 and Y < 8:  # finished row
+            X = 0
+            Y += 1
+        elif X == 8 and Y == 8:  # solved sudoku
+            return True
+    pygame.event.pump()
+    for number in range(1, 10):
+        if isValidMove(number, X, Y):
+            sudokuGrid[X][Y] = number  # set that number
+            global x, y
+            x = X
+            y = Y
+            # white color background\
+            screen.fill((255, 255, 255))
+            draw()
+            draw_box()
+            pygame.display.update()
+            pygame.time.delay(20)
+            if solve(sudokuGrid, X, Y) == 1:
+                return True
+            else:
+                sudokuGrid[X][Y] = 0
+            # white color background\
+            screen.fill((255, 255, 255))
+            draw()
+            draw_box()
+            pygame.display.update()
+            pygame.time.delay(50)
+    return False
 
-
-solve();
+run = True
+while run:
+    screen.fill((255, 255, 255)) ;
+    solve(0, 0);
+    pygame.display.update();
