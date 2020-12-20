@@ -1,83 +1,76 @@
-import numpy as np
+# import pygame library 
 import pygame
+import numpy as np
 
-DIM = 9;
+# initialise the pygame font 
+pygame.font.init()
+
+# Total window 
+screen = pygame.display.set_mode((500, 600))
+
+# Title and Icon  
+pygame.display.set_caption("SUDOKU SOLVER USING BACKTRACKING")
+DIM = 9
 x = 0
 y = 0
 dif = 500 / 9
-
-screen = pygame.display.set_mode((500, 600))
-
-sudokuGrid = np.zeros((DIM, DIM), dtype=np.int32);
-
-primer1 = [ [3, 0, 6, 5, 0, 8, 4, 0, 0],
-         [5, 2, 0, 0, 0, 0, 0, 0, 0],
-         [0, 8, 7, 0, 0, 0, 0, 3, 1],
-         [0, 0, 3, 0, 1, 0, 0, 8, 0],
-         [9, 0, 0, 8, 6, 3, 0, 0, 5],
-         [0, 5, 0, 0, 9, 0, 6, 0, 0],
-         [1, 3, 0, 0, 0, 0, 2, 5, 0],
-         [0, 0, 0, 0, 0, 0, 0, 7, 4],
-         [0, 0, 5, 2, 0, 6, 3, 0, 0] ]
+val = 0
+# Default Sudoku Board.
+sudokuGrid = np.zeros((9, 9))
 
 
-for row in range(len(primer1)):
-    for col in range(len(primer1)):
-        if primer1[row][col] != 0:
-            sudokuGrid[row][col] = primer1[row][col];
+def reset():
+    global sudokuGrid
+    sudokuGrid = [[3, 0, 6, 5, 0, 8, 4, 0, 0],
+                  [5, 2, 0, 0, 0, 0, 0, 0, 0],
+                  [0, 8, 7, 0, 0, 0, 0, 3, 1],
+                  [0, 0, 3, 0, 1, 0, 0, 8, 0],
+                  [9, 0, 0, 8, 6, 3, 0, 0, 5],
+                  [0, 5, 0, 0, 9, 0, 6, 0, 0],
+                  [1, 3, 0, 0, 0, 0, 2, 5, 0],
+                  [0, 0, 0, 0, 0, 0, 0, 7, 4],
+                  [0, 0, 5, 2, 0, 6, 3, 0, 0]]
 
-print("Our sudoku grid: ")
-print(sudokuGrid)
 
 # Load test fonts for future use
-font1 = pygame.font.SysFont()
-
-
-def get_cord(pos):
-    global x
-    x = pos[0] // dif
-    global y
-    y = pos[1] // dif
+font1 = pygame.font.SysFont("times new roman", 35)
+font2 = pygame.font.SysFont("times new roman", 15)
 
 
 # Highlight the cell selected
-def draw_box():
+def draw_box(x, y):
     for i in range(2):
-        pygame.draw.line(screen, (255, 0, 0), (x * dif - 3, (y + i) * dif), (x * dif + dif + 3, (y + i) * dif), 7)
-        pygame.draw.line(screen, (255, 0, 0), ((x + i) * dif, y * dif), ((x + i) * dif, y * dif + dif), 7)
-
-    # Function to draw required lines for making Sudoku grid
+        pygame.draw.line(screen, (239, 92, 157), (x * dif - 3, (y + i) * dif), (x * dif + dif + 3, (y + i) * dif), 7)
+        pygame.draw.line(screen, (239, 92, 157), ((x + i) * dif, y * dif), ((x + i) * dif, y * dif + dif), 7)
 
 
+# Function to draw the sudoku grid
 def draw():
-    # Draw the lines
+    global sudokuGrid
+    # Draw the lines 
 
     for i in range(9):
         for j in range(9):
-            if sudokuGrid[i][j] != 0:
+            if sudokuGrid[j][i] != 0:
                 # Fill blue color in already numbered grid
-                pygame.draw.rect(screen, (0, 153, 153), (i * dif, j * dif, dif + 1, dif + 1))
+                pygame.draw.rect(screen, (124, 193, 239), (i * dif, j * dif, dif + 1, dif + 1))
 
-                # Fill gird with default numbers specified
-                text1 = font1.render(str(sudokuGrid[i][j]), 1, (0, 0, 0))
-                screen.blit(text1, (i * dif + 15, j * dif + 15))
-                # Draw lines horizontally and verticallyto form grid
+                # Fill gird with default numbers specified 
+                text1 = font1.render(str(sudokuGrid[j][i]), 1, (0, 0, 0))
+                screen.blit(text1, (i * dif + 20, j * dif + 9))
+                # Draw lines horizontally and vertically to form grid
     for i in range(10):
         if i % 3 == 0:
-            thick = 7
+            thick = 5
         else:
-            thick = 1
+            thick = 2
         pygame.draw.line(screen, (0, 0, 0), (0, i * dif), (500, i * dif), thick)
         pygame.draw.line(screen, (0, 0, 0), (i * dif, 0), (i * dif, 500), thick)
 
-    # Fill value entered in cell
 
 
-def draw_val(val):
-    text1 = font1.render(str(val), 1, (0, 0, 0))
-    screen.blit(text1, (x * dif + 15, y * dif + 15))
 
-
+# Check if the value entered in board is valid
 def isValidMove(number, Xcoord, Ycoord):
     global sudokuGrid;
     for col in range(DIM):  # Check row
@@ -86,19 +79,20 @@ def isValidMove(number, Xcoord, Ycoord):
     for row in range(DIM):  # Check column
         if sudokuGrid[row][Ycoord] == number:
             return False;
-    return isNumberInSquare(number, (Xcoord//3)*3, (Ycoord//3)*3)
+    return isNumberInSquare(number, (Xcoord // 3) * 3, (Ycoord // 3) * 3)
 
 
 def isNumberInSquare(number, squareIndex1, squareIndex2):
     global sudokuGrid;
-    for X in range(squareIndex1, squareIndex1+2):
-        for Y in range(squareIndex2, squareIndex2+2):
+    for X in range(squareIndex1, squareIndex1 + 3):
+        for Y in range(squareIndex2, squareIndex2 + 3):
             if sudokuGrid[X][Y] == number:
                 return False;
     return True;
 
 
-def solve(X, Y):
+# Solves the sudoku board using Backtracking Algorithm
+def solve(X, Y, Slow=False):
     while sudokuGrid[X][Y] != 0:  # not empty
         if X < 8:  # going throw row
             X += 1
@@ -111,29 +105,63 @@ def solve(X, Y):
     for number in range(1, 10):
         if isValidMove(number, X, Y):
             sudokuGrid[X][Y] = number  # set that number
-            global x, y
-            x = X
-            y = Y
-            # white color background\
+            # white color background
             screen.fill((255, 255, 255))
             draw()
-            draw_box()
+            draw_box(Y, X)
             pygame.display.update()
-            pygame.time.delay(20)
-            if solve(sudokuGrid, X, Y) == 1:
+            if Slow:
+                pygame.time.delay(65)
+            else:
+                pygame.time.delay(10)
+            if solve(X, Y, Slow) == 1:
                 return True
             else:
-                sudokuGrid[X][Y] = 0
-            # white color background\
+                sudokuGrid[X][Y] = 0  # if we failed to solve it
+            # white color background
             screen.fill((255, 255, 255))
             draw()
-            draw_box()
+            draw_box(Y, X)
             pygame.display.update()
-            pygame.time.delay(50)
+            if Slow:
+                pygame.time.delay(100)
+            else:
+                pygame.time.delay(30)
     return False
 
+
+# Display instruction for the game
+def instruction():
+    text = font2.render("Press enter to visualize, S for slow visualization or D to reset", 1, (0, 0, 0))
+    screen.blit(text, (20, 540))
+
+
 run = True
+reset();
+# The loop thats keep the window running 
 while run:
-    screen.fill((255, 255, 255)) ;
-    solve(0, 0);
-    pygame.display.update();
+
+    # White color background 
+    screen.fill((255, 255, 255))
+    # Loop through the events stored in event.get() 
+    for event in pygame.event.get():
+        # Quit the game window 
+        if event.type == pygame.QUIT:
+            run = False
+            # Get the mouse postion to insert number
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
+                solve(0, 0);
+            if event.key == pygame.K_d:
+                reset();
+            if event.key == pygame.K_s:
+                solve(0, 0, Slow=True);
+
+    draw()
+    instruction()
+
+    # Update window 
+    pygame.display.update()
+
+# Quit pygame window     
+pygame.quit()
